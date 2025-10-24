@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux Security & Administration Quiz</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+  h1 { color: #333; }
+  .question { margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .answers { list-style-type: none; padding: 0; }
+  .answers li { margin: 5px 0; cursor: pointer; }
+  button { margin-top: 10px; padding: 5px 10px; border: none; border-radius: 5px; background: #007bff; color: #fff; cursor: pointer; }
+  button:hover { background: #0056b3; }
+  .result { font-weight: bold; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>Linux Security & Administration Quiz</h1>
+
+<div id="quiz-container"></div>
+
+<script>
+const questions = [
+{q:"Which command lists all groups a user belongs to?", a:["cat /etc/group","groups username","ls -l /home","id root"], correct:"b"},
+{q:"Which file defines system-wide password complexity rules on Ubuntu?", a:["/etc/security/pwquality.conf","/etc/passwd","/etc/group","/etc/shadow"], correct:"a"},
+{q:"What is the purpose of the sticky bit on a directory like /tmp?", a:["Allow anyone to modify all files","Execute files with owner privileges","Only file owner can delete files in the directory","Force password expiration"], correct:"c"},
+{q:"Which command safely edits the sudoers file?", a:["nano /etc/sudoers","vi /etc/sudoers","sudoedit /etc/sudoers","visudo"], correct:"d"},
+{q:"How do you copy your SSH public key to a remote server?", a:["cp ~/.ssh/id_rsa.pub /remote/server","ssh-copy-id username@remote_host","scp ~/.ssh/id_rsa username@remote_host:/tmp","ssh-add ~/.ssh/id_rsa.pub"], correct:"b"},
+{q:"Which chmod value sets read/write/execute for owner, read/execute for group, and no access for others?", a:["777","644","750","600"], correct:"c"},
+{q:"Where are per-user password aging rules stored or managed?", a:["chage command and /etc/shadow","/etc/group","/etc/passwd only","~/.bashrc"], correct:"a"},
+{q:"What is the purpose of setgid on a directory?", a:["Execute files as the directory owner","Prevent users from deleting files","Encrypt files in the directory","New files inherit the directory’s group ownership"], correct:"d"},
+{q:"How do you add a user to the sudo group?", a:["sudo adduser username","sudo usermod -aG sudo username","sudo passwd username","sudo deluser username sudo"], correct:"b"},
+{q:"Which command shows both user ID, primary group ID, and secondary groups?", a:["id username","groups username","whoami","cat /etc/passwd"], correct:"a"},
+{q:"Which command checks and repairs a Linux filesystem?", a:["fdisk","fsck","parted","mkfs"], correct:"b"},
+{q:"Which command creates or modifies disk partitions?", a:["fsck","mkfs","fdisk","df"], correct:"c"},
+{q:"Where are system logs typically located?", a:["/var/log","/usr/log","/opt/log","/etc/log"], correct:"a"},
+{q:"Which tool configures automatic log rotation?", a:["journalctl","sysctl","logrotate","rsyslog"], correct:"c"},
+{q:"Which command lists currently scheduled cron jobs for a user?", a:["sudo crond","crontab -l","systemctl list-timers","ls /etc/cron.d"], correct:"b"},
+{q:"What is the correct crontab time format order?", a:["day hour minute month weekday","month day hour minute weekday","hour minute day month weekday","minute hour day month weekday"], correct:"d"},
+{q:"Where are system-wide cron jobs typically stored?", a:["/etc/crontab","/var/spool/cron","/usr/local/cron","~/.crontab"], correct:"a"},
+{q:"Which command displays current authentication logs?", a:["cat /var/log/syslog","tail -f /var/log/auth.log","grep ssh /etc/passwd","sudo journalctl --kernel"], correct:"b"},
+{q:"Which command generates a new SSH key pair?", a:["ssh-add -K","ssh-agent","ssh-keygen","ssh-copy-id"], correct:"c"},
+{q:"Default SSH key files are stored in which directory?", a:["~/.ssh/","/etc/ssh/","/usr/ssh/","/var/ssh/"], correct:"a"},
+{q:"Which command changes both file owner and group?", a:["chgrp","chmod","usermod","chown user:group file"], correct:"d"},
+{q:"Which permission value represents rwxr-xr-x?", a:["740","775","755","644"], correct:"c"},
+{q:"Which command sets a password expiration policy?", a:["passwd -l","chage -M 90 username","useradd -p","passwd -S"], correct:"b"},
+{q:"Which file controls default password aging for new accounts?", a:["/etc/shadow","/etc/security/limits.conf","/etc/login.defs","/etc/default/useradd"], correct:"d"},
+{q:"Which directory contains user-specific crontab files?", a:["/var/spool/cron/crontabs","/etc/cron.daily","/etc/cron.d","/usr/local/cron"], correct:"a"},
+{q:"Which command verifies sudo configuration syntax?", a:["sudo -v","visudo -c","sudoedit","test-sudo"], correct:"b"},
+{q:"Which option in /etc/sudoers requires users to enter their password?", a:["NOPASSWD","SETENV","!requiretty","PASSWD"], correct:"d"},
+{q:"Which tool views kernel and boot logs?", a:["top","sysctl","journalctl -k","dmesg -f"], correct:"c"},
+{q:"What does chmod 640 file.txt do?", a:["rw for owner, r for group, none for others","rw for owner, r for all","r for owner, none for others","rwx for owner, r for group, x for others"], correct:"a"},
+{q:"Which command changes directory group ownership recursively?", a:["chmod -R","chown -R :groupname /path","usermod -G","chgrp -r"], correct:"b"}
+];
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  const shuffled = shuffle([...questions]);
+  container.innerHTML = '';
+  shuffled.forEach((q,i) => {
+    const div = document.createElement('div');
+    div.className = 'question';
+    div.setAttribute('data-answer', q.correct);
+    let answersHtml = q.a.map(ans => `<li>${ans}</li>`).join('');
+    div.innerHTML = `<p>${i+1}. ${q.q}</p><ul class="answers">${answersHtml}</ul><button onclick="checkAnswer(this)">Check Answer</button><div class="result"></div>`;
+    container.appendChild(div);
+  });
+  attachAnswerEvents();
+}
+
+function attachAnswerEvents() {
+  document.querySelectorAll('.answers li').forEach(li => {
+    li.addEventListener('click', () => {
+      li.parentElement.querySelectorAll('li').forEach(x => x.style.background = '');
+      li.style.background = 'lightgreen';
+    });
+  });
+}
+
+function checkAnswer(btn) {
+  const q = btn.parentElement;
+  const selected = Array.from(q.querySelectorAll('.answers li')).find(li => li.style.background === 'lightgreen');
+  const result = q.querySelector('.result');
+  const correct = q.getAttribute('data-answer');
+  if (!selected) { alert('Select an answer first!'); return; }
+  const idx = Array.from(selected.parentElement.children).indexOf(selected);
+  const letters = ['a','b','c','d'];
+  if (letters[idx] === correct) { result.textContent = 'Correct!'; result.style.color = 'green'; }
+  else { result.textContent = 'Incorrect. Correct answer: ' + correct.toUpperCase(); result.style.color = 'red'; }
+}
+
+renderQuiz();
+</script>
+</body>
+</html>
